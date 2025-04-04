@@ -13,9 +13,11 @@ if [ ! -z "${GID}" ]; then
 fi
 
 chown -R anythingllm:anythingllm /app
-chown -R anythingllm:anythingllm /app/server
-chown -R anythingllm:anythingllm /app/frontend
-chown -R anythingllm:anythingllm /app/collector
 chown -R anythingllm:anythingllm "${STORAGE_DIR}"
 
-exec gosu anythingllm "/usr/local/bin/docker-entrypoint-final.sh"
+gosu anythingllm bash -c "cd /app/server && npx prisma generate --schema=./prisma/schema.prisma; npx prisma migrate deploy --schema=./prisma/schema.prisma; node /app/server/index.js" &
+
+gosu anythingllm bash -c "node /app/collector/index.js;" &
+
+wait -n
+exit $?
